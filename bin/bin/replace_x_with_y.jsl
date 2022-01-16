@@ -1,0 +1,89 @@
+Names Default To Here(1);
+//https://community.jmp.com/t5/Discussions/Should-you-Loop-through-a-data-table-or-use-Recode-or-use-Get/m-p/381448
+//might have to add check for column types? if numeric -> handle as numbers if you can
+
+replace_x_with_y_in_column = function({dt, list_of_cols, x, y}, {Default Local},
+/*************************************************************************
+Function: replace_x_with_y_in_column
+	---Prototype---
+	replace_x_with_y_in_column(datatable dt, list(str) list_col_names, str x, str y)
+	---------------
+	Function to replace values x with y in column list of datatable. Inputs are strings but will be converted to numbers,
+	if columns data type is numeric
+	
+Returns:
+	
+
+Prototype:
+	replace_x_with_y_in_column(dt, list_col_names, x, y)
+
+Parameters:
+	dt - Reference to datatable which will be modified
+	list_col_names - List of strings of column names to check for missing values
+	x - Value to be replaced
+	y - Value to replace with
+
+Examples:
+	----------JSL-----------
+	dt = Current Data Table();
+	list_cols = dt << Get Column Names(Character, String);
+	replace_x_with_y_in_column(dt, list_cols, "0", ".");
+	------------------------	
+*************************************************************************/
+	For Each({col_name}, list_of_cols,
+		//check datatype...
+		cur_col = Column(dt, col_name);
+		d_type = cur_col << Get Data Type;
+		If(d_type == "Numeric", //this might mess something up... possibly add checks?
+			x = Num(x);
+			y = Num(y);
+		);
+		cur_col[Loc(dt[0,col_name], x)] = y;
+	);
+);
+
+//if setting . or ""
+set_missing_value_code = function({dt, list_of_cols, x}, {Default Local},
+/*************************************************************************
+Function: set_missing_value_code
+	---Prototype---
+	set_missing_value_code(datatable dt, list(str) list_col_names, str x)
+	---------------
+	Function to set x values as missing value codes. Inputs are strings but will be converted to numbers,
+	if columns data type is numeric
+
+Returns:
+	
+
+Prototype:
+	> set_missing_value_code(dt, list_col_names, x)
+
+Parameters:
+	dt - Reference to datatable which will be modified
+	list_col_names - List of strings of column names to check for missing values
+	x - Value to be set into Missing Value Codes
+
+Examples:
+	----------JSL-----------
+	dt = Current Data Table();
+	list_cols = dt << Get Column Names(Character, String);
+	set_missing_value_code(dt, list_cols, "0");
+	------------------------	
+*************************************************************************/
+	For Each({col_name}, list_of_cols,
+		cur_col = Column(dt, col_name);
+		d_type = cur_col << Get Data Type;
+		If(d_type == "Numeric", //this might mess something up... possibly add checks?
+			x = Num(x);
+		);
+		//with column properties we have to check that we dont delete old ones
+		old_vals = cur_col << Get Property("Missing Value Codes");
+		vals_to_add = {};
+		If(IsEmpty(old_vals),
+			Insert Into(vals_to_add, x);
+		, //else
+			vals_to_add = Insert(old_vals, x);
+		);
+		Eval(EvalExpr(cur_col << Set Property("Missing Value Codes", Expr(vals_to_add))));
+	);
+);

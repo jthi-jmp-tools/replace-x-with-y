@@ -1,0 +1,7 @@
+{
+	"GUI":{
+		"window_title": "Replace X with Y",
+		"window_icon": "OrderBy",
+		"keep_dialog_open": 1
+	}
+}
