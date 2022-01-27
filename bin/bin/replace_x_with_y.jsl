@@ -35,10 +35,11 @@ Examples:
 		cur_col = Column(dt, col_name);
 		d_type = cur_col << Get Data Type;
 		If(d_type == "Numeric", //this might mess something up... possibly add checks?
-			x = Num(x);
-			y = Num(y);
+			//changing string to num with isnt enough... this should be revisited
+			cur_col[Loc(dt[0,col_name], Num(x))] = Num(y);
+		, //else
+			cur_col[Loc(dt[0,col_name], x)] = y;
 		);
-		cur_col[Loc(dt[0,col_name], x)] = y;
 	);
 );
 
